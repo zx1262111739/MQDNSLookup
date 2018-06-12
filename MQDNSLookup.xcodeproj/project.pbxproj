@@ -11,6 +11,7 @@
 		6271737220CFC57600367A41 /* MQDNSLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6271737120CFC57600367A41 /* MQDNSLookup.swift */; };
 		6271737520CFC5E600367A41 /* CocoaAsyncSocket.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6271737420CFC5E600367A41 /* CocoaAsyncSocket.framework */; };
 		6271737620CFC5F800367A41 /* CocoaAsyncSocket.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6271737420CFC5E600367A41 /* CocoaAsyncSocket.framework */; };
+		6271746D20CFDA3400367A41 /* Convert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6271746C20CFDA3400367A41 /* Convert.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -32,6 +33,7 @@
 		6271737020CFC56D00367A41 /* Cartfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Cartfile; sourceTree = "<group>"; };
 		6271737120CFC57600367A41 /* MQDNSLookup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MQDNSLookup.swift; sourceTree = "<group>"; };
 		6271737420CFC5E600367A41 /* CocoaAsyncSocket.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CocoaAsyncSocket.framework; path = MQDNSLookup/Carthage/Build/Mac/CocoaAsyncSocket.framework; sourceTree = "<group>"; };
+		6271746C20CFDA3400367A41 /* Convert.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convert.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				6271737020CFC56D00367A41 /* Cartfile */,
+				6271746C20CFDA3400367A41 /* Convert.swift */,
 				6271737120CFC57600367A41 /* MQDNSLookup.swift */,
 				6271736920CFC4F500367A41 /* main.swift */,
 			);
@@ -138,6 +141,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6271736A20CFC4F500367A41 /* main.swift in Sources */,
+				6271746D20CFDA3400367A41 /* Convert.swift in Sources */,
 				6271737220CFC57600367A41 /* MQDNSLookup.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -9,46 +9,6 @@
 import Cocoa
 import CocoaAsyncSocket
 
-extension Data {
-    var cstr: String {
-        var rawStr = ""
-        for byte in self.enumerated() {
-            rawStr.append(Character.init(Unicode.Scalar.init(byte.element)))
-        }
-        return rawStr
-    }
-}
-
-extension UInt16 {
-    var bytes: [UInt8] {
-        return [UInt8(truncatingIfNeeded: self >> 8), UInt8(truncatingIfNeeded:self)]
-    }
-}
-
-extension UInt32 {
-    var bytes: [UInt8] {
-        return [UInt8(truncatingIfNeeded: self >> 24), UInt8(truncatingIfNeeded:self >> 16), UInt8(truncatingIfNeeded:self >> 8), UInt8(truncatingIfNeeded:self)]
-    }
-}
-
-extension Array where Element == UInt8 {
-    var toUInt16 : UInt16 {
-        guard self.count >= 2 else {
-            return 0
-        }
-        return UInt16(self[0]) << 8 | UInt16(self[1])
-    }
-    
-    var toUInt32 : UInt16 {
-        guard self.count >= 4 else {
-            return 0
-        }
-        return UInt16(self[0]) << 24 | UInt16(self[1]) << 16 | UInt16(self[2]) << 8 | UInt16(self[3])
-    }
-}
-
-
-/// DNS 报文
 class MQDNSMessage : NSObject {
     
     var id: UInt16 = 0
@@ -228,6 +188,10 @@ class MQDNSCache : NSObject {
     var resultDict = [String : MQDNSMessage]()
 }
 
+
+fileprivate let IPv4Regular = "((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(25[0-5]|2[0-4]\\d|[01]?\\d\\d?)"
+fileprivate let IPv6Regular = "\\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:)))(%.+)?\\s*"
+
 class MQDNSLookup: NSObject, GCDAsyncUdpSocketDelegate {
     
     static var `default` = MQDNSLookup()
@@ -238,6 +202,10 @@ class MQDNSLookup: NSObject, GCDAsyncUdpSocketDelegate {
     private var lookupCount: UInt16 = 0
     private var udpSocket: GCDAsyncUdpSocket?
     private var cacheDict = [String : MQDNSCache]()
+    
+    private var ipv4Predicate = NSPredicate.init(format: "SELF MATCHES %@", IPv4Regular)
+    private var ipv6Predicate = NSPredicate.init(format: "SELF MATCHES %@", IPv6Regular)
+    
     override init() {
         super.init()
         
@@ -255,9 +223,20 @@ class MQDNSLookup: NSObject, GCDAsyncUdpSocketDelegate {
     ///
     /// - Parameters:
     ///   - name: 域名
-    ///   - server: DNS服务器
+    ///   - server: DNS服务器 // 101.132.183.99
     ///   - completion: 返回block ip只返回第一个 也可能一个都没
-    func lookup(_ name: String, server: String = "101.132.183.99", completion: @escaping MQDNSLookupCompletion) {
+    func lookup(_ name: String, server: String = "114.114.114.114", completion: @escaping MQDNSLookupCompletion) {
+        
+        if ipv4Predicate.evaluate(with: name) {
+            completion(name, nil)
+            return
+        }
+        
+        if ipv6Predicate.evaluate(with: name) {
+            completion(name, nil)
+            return
+        }
+        
         if let cache = cacheDict[server], let mess = cache.resultDict[name] {
             response(mess, completion)
             return
@@ -275,6 +254,7 @@ class MQDNSLookup: NSObject, GCDAsyncUdpSocketDelegate {
         lookupCount = lookupCount + 1
         if lookupCount >= UInt16.max {
             lookupCount = 0
+            completions.removeAll()
         }
     }
     
